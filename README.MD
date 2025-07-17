@@ -35,7 +35,7 @@ Siga os passos abaixo para configurar e executar a aplicação localmente:
 1. **Clone o repositório**:
 
    ```bash
-   git clone [URL_DO_REPOSITORIO]
+   git clone https://github.com/carloseduardoalvesviana/desafio-01-tasks-csv-import
    ```
 
 2. **Acesse o diretório do projeto**:
