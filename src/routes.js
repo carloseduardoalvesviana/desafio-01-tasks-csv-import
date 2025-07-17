@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { Database } from "./database.js";
 import { buildRoutePath } from "./utils/build-route-path.js";
+import { validateTaskInput } from "./utils/validate-input.js";
 
 const database = new Database();
 
@@ -9,13 +10,18 @@ export const routes = [
     method: "GET",
     path: buildRoutePath("/tasks"),
     handler: (req, res) => {
-      const { search } = req.query
+      const { search } = req.query;
 
-      const tasks = database.select("tasks", search ? {
-        title: search,
-        description: search
-      } : null);
-      
+      const tasks = database.select(
+        "tasks",
+        search
+          ? {
+              title: search,
+              description: search,
+            }
+          : null
+      );
+
       return res
         .setHeader("Content-Type", "application/json")
         .writeHead(200)
@@ -26,17 +32,21 @@ export const routes = [
     method: "GET",
     path: buildRoutePath("/tasks/:id"),
     handler: (req, res) => {
-      const { id } = req.params
+      const { id } = req.params;
 
       const task = database.selectOne("tasks", id);
 
-      const response = res.setHeader("Content-Type", "application/json");
-
-      if(!task) {
-        return response.writeHead(404).end();
+      if (!task) {
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(404)
+          .end(JSON.stringify({ message: "registro não existe" }));
       }
 
-      return response.writeHead(200).end(JSON.stringify(task));
+      return res
+        .setHeader("Content-Type", "application/json")
+        .writeHead(200)
+        .end(JSON.stringify(task));
     },
   },
   {
@@ -44,7 +54,15 @@ export const routes = [
     path: buildRoutePath("/tasks"),
     handler: (req, res) => {
       const { title, description } = req.body;
-      
+
+      const errors = validateTaskInput(title, description);
+      if (errors.length > 0) {
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(400)
+          .end(JSON.stringify({ errors }));
+      }
+
       const task = {
         id: randomUUID(),
         title,
@@ -53,7 +71,7 @@ export const routes = [
         updated_at: null,
         completed_at: null,
       };
-      
+
       database.insert("tasks", task);
 
       return res.writeHead(201).end();
@@ -63,49 +81,54 @@ export const routes = [
     method: "DELETE",
     path: buildRoutePath("/tasks/:id"),
     handler: (req, res) => {
-      const { id } = req.params
+      const { id } = req.params;
 
       const task = database.selectOne("tasks", id);
 
-      const response = res.setHeader("Content-Type", "application/json");
-
-      if(!task) {
-        return response.writeHead(404).end();
+      if (!task) {
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(404)
+          .end(JSON.stringify({ message: "registro não existe" }));
       }
 
-      database.delete('tasks', id)
-    
-      return response.writeHead(204).end();
+      database.delete("tasks", id);
+
+      return res.writeHead(204).end();
     },
   },
   {
     method: "PUT",
     path: buildRoutePath("/tasks/:id"),
     handler: (req, res) => {
-      const { id } = req.params
-      
-      const { title, description } = req.body
+      const { id } = req.params;
 
-      const task = database.selectOne("tasks", id);
+      const { title, description } = req.body;
 
-      if(title) {
-        task.title = title
+      const errors = validateTaskInput(title, description);
+      if (errors.length > 0) {
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(400)
+          .end(JSON.stringify({ errors }));
       }
 
-      if(description) {
-        task.title = description
+         const task = database.selectOne("tasks", id);
+
+      if (!task) {
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(404)
+          .end(JSON.stringify({ message: "registro não existe" }));
       }
 
-      const response = res.setHeader("Content-Type", "application/json");
+      task.title = title ? title : task.title;
+      task.description = description ? description : task.description;
 
-      if(!task) {
-        return response.writeHead(404).end();
-      }
+      database.update("tasks", id, task);
 
-      database.update('tasks', id, task)
-
-      return response.writeHead(204).end();
-    }
+      return res.writeHead(204).end();
+    },
   },
   {
     method: "PATCH",
@@ -114,16 +137,18 @@ export const routes = [
       const { id } = req.params;
 
       const task = database.selectOne("tasks", id);
-      const response = res.setHeader("Content-Type", "application/json");
 
       if (!task) {
-        return response.writeHead(404).end();
+        return res
+          .setHeader("Content-Type", "application/json")
+          .writeHead(404)
+          .end(JSON.stringify({ message: "registro não existe" }));
       }
 
       const completed_at = task?.completed_at ? null : new Date();
-      database.update('tasks', id, { ...task, completed_at });
+      database.update("tasks", id, { ...task, completed_at });
 
-      return response.writeHead(204).end();
-    }
-  }
+      return res.writeHead(204).end();
+    },
+  },
 ];
