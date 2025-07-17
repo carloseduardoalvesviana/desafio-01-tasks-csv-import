@@ -1,0 +1,30 @@
+### Criar Tarefa
+POST http://localhost:3333/tasks HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Estudar php",
+    "description": "java 11"
+}
+
+### Listar as tarefas
+GET http://localhost:3333/tasks HTTP/1.1
+
+### Ver Tarefa Especifica
+GET http://localhost:3333/tasks/72391594-b32f-4992-bdb3-bf2b7a2534dc HTTP/1.1
+
+### Atualizar Tarefa pelo id
+PUT http://localhost:3333/tasks/72391594-b32f-4992-bdb3-bf2b7a2534dc HTTP/1.1
+content-type: application/json
+
+{
+    "title": "Estudar node up"
+}
+
+### Deleta uma Tarefa pelo id
+DELETE  http://localhost:3333/tasks/e39fa7da-2a30-4bc5-968c-12b1fb832c3f HTTP/1.1
+content-type: application/json
+
+### Completa Tarefa pelo id
+PATCH  http://localhost:3333/tasks/72391594-b32f-4992-bdb3-bf2b7a2534dc HTTP/1.1
+content-type: application/json
